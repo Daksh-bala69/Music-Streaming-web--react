@@ -1,0 +1,1 @@
+A passion project with me in the building rn , with a web application that plays songs and stuff that i like
