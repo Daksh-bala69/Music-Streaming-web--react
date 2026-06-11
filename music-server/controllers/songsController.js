@@ -1,13 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { loadSongsFromDB } from "../data/songs.js";
+import { findSongById, findAllSongs } from "../models/songModel.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // LOADS THE METADATA OF THE SONGS IN THE ARRAY FORM THE DATABASE
-const songs= await loadSongsFromDB();
+const songs= await findAllSongs();
 
 // THIS IS FOR THE META DATA OF THE SONGS FOR NOW
 export function getSongsController(req, res) {

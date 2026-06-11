@@ -8,7 +8,7 @@ function Sidebar() {
       <nav className="menu">
         <a href="#" className="active">Home</a>
         <a href="#">Search</a>
-        <a href="#">Your Library</a>
+        <a href="#">Your Playlists</a>
         <a href="#">Vibe Mode</a>
         <a href="#">Discover</a>
       </nav>
