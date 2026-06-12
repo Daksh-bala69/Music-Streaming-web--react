@@ -13,7 +13,8 @@
     "nodemon": "^3.1.14",
     "parcel": "^2.15.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.17.0"
   },
   "devDependencies": {
     "parcel-reporter-static-files-copy": "^1.5.3"

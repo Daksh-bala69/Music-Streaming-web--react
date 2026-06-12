@@ -3,11 +3,14 @@ import Sidebar from "./components/Sidebar";
 import PlayerCard from "./components/PlayerCard";
 import Queue from "./components/Queue";
 import BottomPlayer from "./components/BottomPlayer";
+import SearchPage from "./pages/SearchPage";
 
 const API_URL = "http://localhost:5000";
 
 function App() {
-  const [songs,setSongs] = React.useState([]); // FETCHES SONGS FROM THE SERVER
+  const [songs, setSongs] = React.useState([]); // FETCHES SONGS FROM THE SERVER
+
+  //STATES FOR SONG INFO OR FUCNTIONS
   const [currentSongIndex, setCurrentSongIndex] = React.useState(0);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
@@ -16,13 +19,16 @@ function App() {
   const [repeatMode, setRepeatMode] = React.useState(false);
   const [isShuffle, setIsShuffle] = React.useState(false);
 
+  //STATES FOR CHANGING PAGES(JUST COMPONENTS FOR NOW)
+  const [activePage, setActivePage] = React.useState("home");
+
   const audioRef = React.useRef(new Audio());
   const currentSong = songs[currentSongIndex];  // CURRENT SONG
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
 
     async function fetchSongs() {
-      try{
+      try {
 
         const response = await fetch(`${API_URL}/api/songs`);
         const data = await response.json();
@@ -31,7 +37,7 @@ function App() {
           return (
             {
               ...song,
-              audio : `${API_URL}/api/songs/${song.id}/stream`,
+              audio: `${API_URL}/api/songs/${song.id}/stream`,
               cover: `${API_URL}${song.cover}`
             }
           )
@@ -45,8 +51,8 @@ function App() {
         }
       }
 
-      catch(err){
-        console.error("Error fetching songs: ",err);
+      catch (err) {
+        console.error("Error fetching songs: ", err);
       }
     }
 
@@ -72,7 +78,7 @@ function App() {
     setIsPlaying(false);
 
     //HANDLES THE PLAYING OR PAUSE STATE OF THE NEWLY LOADED SONG
-    if(shouldPlay){
+    if (shouldPlay) {
       audioRef.current.play();
       setIsPlaying(true);
     }
@@ -90,18 +96,18 @@ function App() {
   }
 
   //TOGGLE THE SHUFFLE MODE
-  function toggleShuffle(){
+  function toggleShuffle() {
     setIsShuffle(prev => !prev);
   }
 
   // TOGGLE THE REPEAT MODE
-  function toggleRepeat(){
+  function toggleRepeat() {
     setRepeatMode(prev => !prev);
   }
 
   // NEXT BUTTON LOGIC
-  function nextSong () {
-    if(repeatMode || isShuffle) {
+  function nextSong() {
+    if (repeatMode || isShuffle) {
       handleSongEnd();
       return;
     }
@@ -110,44 +116,44 @@ function App() {
   }
 
   // PREV BUTTON LOGIC
-  function previousSong () {
-    if(repeatMode || isShuffle) {
+  function previousSong() {
+    if (repeatMode || isShuffle) {
       handleSongEnd();
       return;
     }
 
     loadSong(currentSongIndex - 1);
-  }    
+  }
 
   function handleSongEnd() {
 
-      if(repeatMode) {
-        loadSong(currentSongIndex);
-        return;
-      }
-
-      if(isShuffle) {
-        let randomIndex = Math.floor(Math.random() * songs.length);
-
-        if(songs.length > 1){
-          while(randomIndex === currentSongIndex){
-            randomIndex = Math.floor(Math.random() * songs.length);
-          }
-        }
-
-        loadSong(randomIndex);
-        return;
-      }
-
-      loadSong(currentSongIndex + 1);
+    if (repeatMode) {
+      loadSong(currentSongIndex);
+      return;
     }
+
+    if (isShuffle) {
+      let randomIndex = Math.floor(Math.random() * songs.length);
+
+      if (songs.length > 1) {
+        while (randomIndex === currentSongIndex) {
+          randomIndex = Math.floor(Math.random() * songs.length);
+        }
+      }
+
+      loadSong(randomIndex);
+      return;
+    }
+
+    loadSong(currentSongIndex + 1);
+  }
 
   // HANDLES THE UPDATION OF THE TIME AND THE DURATION WHEN NEW SONG IS LOADED AND AS THE SONG IS PROGRESSING
   // ALSO HANDLES VOLUME
   React.useEffect(() => {
     const audio = audioRef.current;
 
-    function updateTime(){
+    function updateTime() {
       setCurrentTime(audio.currentTime)
     }
 
@@ -169,9 +175,9 @@ function App() {
   }, [currentSongIndex, volume, duration, isShuffle, repeatMode]);
 
   // SEEK LOGIC FOR THE SEEKBAR
-  function seekTo(percent){
+  function seekTo(percent) {
     const audio = audioRef.current;
-    if(!audio.duration) return;
+    if (!audio.duration) return;
 
     audio.currentTime = audio.duration * percent;
     setCurrentTime(audio.currentTime);
@@ -185,7 +191,7 @@ function App() {
     setVolume(percent);
   }
 
-  if(songs.length === 0) {
+  if (songs.length === 0) {
     return (
       <div>Loading songs....</div>
     )
@@ -193,24 +199,30 @@ function App() {
 
   return (
     <div className="container">
-      { /* SIDE BAR WITH ALL LINKS TO DIFFERENT PAGES */ }
-      <Sidebar /> 
+      { /* SIDE BAR WITH ALL LINKS TO DIFFERENT PAGES */}
+      <Sidebar activePage={activePage} setActivePage={setActivePage} />
 
-      { /* PLAYERCARD CONTAINING THE IMAGE, NAME OF ARTIST AND THE SONG AND THE PORGRESSBAR AND THE MAIN CONTROL BUTTONS AND THE LYRICS */ }
-      <PlayerCard
-        currentSong={currentSong}
-        isPlaying={isPlaying}
-        togglePlay={togglePlay}
-        nextSong={nextSong}
-        previousSong={previousSong}
-        seekTo = {seekTo}
-        duration = {duration}
-        currentTime = {currentTime}
-        isShuffle = {isShuffle}
-        toggleShuffle = {toggleShuffle}
-        toggleRepeat = {toggleRepeat}
-        repeatMode = {repeatMode}
-      />
+      {/* MIDDLE CONTENT AREA */}
+      {activePage === "home" && (
+        <PlayerCard
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+          togglePlay={togglePlay}
+          nextSong={nextSong}
+          previousSong={previousSong}
+          seekTo={seekTo}
+          duration={duration}
+          currentTime={currentTime}
+          isShuffle={isShuffle}
+          toggleShuffle={toggleShuffle}
+          toggleRepeat={toggleRepeat}
+          repeatMode={repeatMode}
+        />
+      )}
+
+      {activePage === "search" && (
+        <SearchPage />
+      )}
 
       {/* CONTAINS THE QUEUE LIST AND THE QUEUE CLEAR BUTTON */}
       <Queue
@@ -226,13 +238,13 @@ function App() {
         togglePlay={togglePlay}
         nextSong={nextSong}
         previousSong={previousSong}
-        audioRef = {audioRef}
-        changeVolume = {changeVolume}
-        volume = {volume}
-        isShuffle = {isShuffle}
-        toggleShuffle = {toggleShuffle}
-        toggleRepeat = {toggleRepeat}
-        repeatMode = {repeatMode}
+        audioRef={audioRef}
+        changeVolume={changeVolume}
+        volume={volume}
+        isShuffle={isShuffle}
+        toggleShuffle={toggleShuffle}
+        toggleRepeat={toggleRepeat}
+        repeatMode={repeatMode}
       />
     </div>
   );
