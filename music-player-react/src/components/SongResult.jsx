@@ -2,7 +2,7 @@ import React from "react";
 
 function SongResult(props) {
     return (
-        <div className="songResult">
+        <div className="songResult" onClick={props.onClick}>
             <img src={"http://localhost:5000" + props.song.cover}/>
 
             <div className="resultInfo">

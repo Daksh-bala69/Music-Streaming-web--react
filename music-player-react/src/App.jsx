@@ -84,6 +84,42 @@ function App() {
     }
   }
 
+  //FOR THE SEARCH , FETCHES SONGS FROM THE DATABASE NOW THE PRELOADED SONGS WE HAVE AT THE HOMESCREEN
+  function playSongFromSearch(song) {
+  const existingIndex = songs.findIndex((s) => s.id === song.id);
+
+  // If the song already exists in the main songs array, use your normal loadSong function
+  if (existingIndex !== -1) {
+    loadSong(existingIndex);
+    return;
+  }
+
+  // If it does not exist, format the searched song so it matches your frontend song shape
+  const formattedSong = {
+    ...song,
+    audio: `${API_URL}${song.stream_url}`,
+    cover: song.cover ? `${API_URL}${song.cover}` : null,
+    artist: song.artists?.map((artist) => artist.name).join(", "),
+  };
+
+  const newIndex = songs.length;
+
+  setSongs((prevSongs) => {
+    return [...prevSongs, formattedSong];
+  });
+
+  audioRef.current.pause();
+  audioRef.current = new Audio(formattedSong.audio);
+  audioRef.current.volume = volume;
+
+  setCurrentSongIndex(newIndex);
+  setCurrentTime(0);
+  setDuration(0);
+  setIsPlaying(true);
+
+  audioRef.current.play();
+}
+
   // TOGGLE THE PLAY/PAUSE
   function togglePlay() {
     if (isPlaying) {
@@ -221,7 +257,7 @@ function App() {
       )}
 
       {activePage === "search" && (
-        <SearchPage />
+        <SearchPage playSongFromSearch={playSongFromSearch}/>
       )}
 
       {/* CONTAINS THE QUEUE LIST AND THE QUEUE CLEAR BUTTON */}

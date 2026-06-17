@@ -6,6 +6,7 @@ import songRoutes from "./routes/songsRoutes.js";
 import albumRoutes from "./routes/albumsRoutes.js";
 import artistRoutes from "./routes/artistsRoutes.js";
 import genreRoutes from "./routes/genresRoutes.js";
+import searchRoutes from "./routes/searchRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +24,7 @@ app.use("/api/songs", songRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/artists", artistRoutes);
 app.use("/api/genres", genreRoutes);
+app.use("/api/search", searchRoutes);
 
 
 app.listen(PORT, () => {
