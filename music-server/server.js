@@ -7,6 +7,7 @@ import albumRoutes from "./routes/albumsRoutes.js";
 import artistRoutes from "./routes/artistsRoutes.js";
 import genreRoutes from "./routes/genresRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
+import playlistRoutes from "./routes/playlistRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,18 +15,26 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 5000;
 
-app.use(cors());
+const ALBUMS_ROOT = "/home/Admiral_D/Music/Albums";
 
-//MAKES THE SERVER KEEP UP THE COVER FOLDER AS A STATIC FOLDER TAHT CAN BE ACCESSED BY AN API REQUES TO THE "/COVERS"
+app.use(cors());
+app.use(express.json());
+
+// This exposes your real album folder to the frontend.
+// Example URL:
+// http://localhost:5000/album-files/2007 - Graduation/cover.jpg
+app.use("/album-files", express.static(ALBUMS_ROOT));
+
+// Optional: keep old covers route for old test data
 app.use("/covers", express.static(path.join(__dirname, "covers")));
 
-//USES THESE ROUTERS TO ROUTE THE REQUESTS
+// Routes
 app.use("/api/songs", songRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/artists", artistRoutes);
 app.use("/api/genres", genreRoutes);
 app.use("/api/search", searchRoutes);
-
+app.use("/api/playlists", playlistRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

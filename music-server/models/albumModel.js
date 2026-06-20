@@ -1,6 +1,6 @@
 import pool from "../db/pool.js";
 
-//GETS ALL THE ALBUMS FROM THE DATABSE
+// GETS ALL THE ALBUMS FROM THE DATABASE
 export async function findAllAlbums() {
   const response = await pool.query(`
     SELECT
@@ -8,23 +8,34 @@ export async function findAllAlbums() {
       albums.title,
       albums.cover_filename,
       albums.release_year,
-      artists.name AS artist
+      albums.song_count,
+      albums.total_duration_seconds,
+      artists.name AS artist,
+      '/album-files/' || albums.cover_filename AS cover_url
     FROM albums 
     LEFT JOIN artists
       ON albums.artist_id = artists.id
-    ORDER BY albums.id;
+    ORDER BY albums.release_year, albums.title;
   `);
 
   return response.rows.map((album) => ({
     id: album.id,
     title: album.title,
     artist: album.artist,
+
     releaseYear: album.release_year,
-    cover: `/covers/${album.cover_filename}`,
+    release_year: album.release_year,
+
+    cover_filename: album.cover_filename,
+    cover: album.cover_url,
+    cover_url: album.cover_url,
+
+    song_count: album.song_count,
+    total_duration_seconds: album.total_duration_seconds,
   }));
 }
 
-//FINDS THE ALBUM BY ALBUM ID FROM THE DATABSE(USING ID)
+// FINDS THE ALBUM BY ALBUM ID FROM THE DATABASE
 export async function findAlbumById(id) {
   const response = await pool.query(
     `
@@ -33,7 +44,10 @@ export async function findAlbumById(id) {
       albums.title,
       albums.cover_filename,
       albums.release_year,
-      artists.name AS artist
+      albums.song_count,
+      albums.total_duration_seconds,
+      artists.name AS artist,
+      '/album-files/' || albums.cover_filename AS cover_url
     FROM albums
     LEFT JOIN artists
       ON albums.artist_id = artists.id
@@ -52,29 +66,72 @@ export async function findAlbumById(id) {
     id: album.id,
     title: album.title,
     artist: album.artist,
+
     releaseYear: album.release_year,
-    cover: `/covers/${album.cover_filename}`,
+    release_year: album.release_year,
+
+    cover_filename: album.cover_filename,
+    cover: album.cover_url,
+    cover_url: album.cover_url,
+
+    song_count: album.song_count,
+    total_duration_seconds: album.total_duration_seconds,
   };
 }
 
-// FIND SONGS FROM THAT ABLUM (USING ID)
+// FIND SONGS FROM THAT ALBUM USING ID
 export async function findSongsByAlbumId(id) {
   const response = await pool.query(
     `
     SELECT
-      id,
-      title,
-      filename,
-      duration_seconds
+      songs.id,
+      songs.title,
+      songs.filename,
+      songs.file_path,
+      songs.cover_filename,
+      songs.duration_seconds,
+      songs.track_number,
+
+      albums.id AS album_id,
+      albums.title AS album_title,
+
+      '/api/songs/' || songs.id || '/stream' AS stream_url,
+      '/api/songs/' || songs.id || '/stream' AS audio,
+      '/album-files/' || songs.cover_filename AS cover_url,
+      '/album-files/' || songs.cover_filename AS cover
 
     FROM songs
 
-    WHERE album_id = $1
+    LEFT JOIN albums
+      ON songs.album_id = albums.id
 
-    ORDER BY id;
+    WHERE songs.album_id = $1
+
+    ORDER BY songs.track_number;
     `,
     [id]
   );
 
-  return response.rows;
+  return response.rows.map((song) => ({
+    id: song.id,
+    title: song.title,
+
+    album: song.album_title,
+    album_id: song.album_id,
+
+    filename: song.filename,
+    file_path: song.file_path,
+    cover_filename: song.cover_filename,
+
+    cover: song.cover,
+    cover_url: song.cover_url,
+
+    audio: song.audio,
+    stream_url: song.stream_url,
+
+    duration: song.duration_seconds,
+    duration_seconds: song.duration_seconds,
+
+    track_number: song.track_number,
+  }));
 }

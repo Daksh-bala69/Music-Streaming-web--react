@@ -1,6 +1,6 @@
 import pool from "../db/pool.js";
 
-//FETCHES THE SONGS, GENRES, ARTIST, ALBUMS OF THE QUERY YOU TYPE
+// FETCHES THE SONGS, GENRES, ARTISTS, ALBUMS OF THE QUERY YOU TYPE
 export async function searchAll(query) {
   const searchTerm = `%${query}%`;
 
@@ -22,35 +22,29 @@ export async function searchAll(query) {
 
 // SENDS THE SONGS SIMILAR TO THE SEARCH QUERY
 async function searchSongs(searchTerm) {
-/*
-    FINDS 20 SONGS MATHCHING THE QUERY:
-        1)PROVIDES THE SONGS FROM THE ALBUM (IF ALBUM NAME IS SENT AS THE QUERY) 
-        2)PROVIDES THE SONGD FROM A GENRE (IF THE GENRE IS SENDT AS THE QUERY)
-        3)PROVIDES THE SONGD FROM A ARTIST (IF THE ARTIST IS SENDT AS THE QUERY)
-*/
-
   const result = await pool.query(
     `
     SELECT
       s.id,
       s.title,
       s.filename,
+      s.file_path,
+      s.cover_filename,
       s.duration_seconds,
-      '/api/songs/' || s.id || '/stream' AS audio,
+      s.track_number,
 
-      CASE
-        WHEN s.cover_filename IS NOT NULL THEN '/covers/' || s.cover_filename
-        ELSE NULL
-      END AS cover,
+      '/api/songs/' || s.id || '/stream' AS stream_url,
+      '/api/songs/' || s.id || '/stream' AS audio,
+      '/album-files/' || s.cover_filename AS cover_url,
+      '/album-files/' || s.cover_filename AS cover,
 
       CASE 
         WHEN al.id IS NOT NULL THEN json_build_object(
           'id', al.id,
           'title', al.title,
-          'cover', CASE
-            WHEN al.cover_filename IS NOT NULL THEN '/covers/' || al.cover_filename
-            ELSE NULL
-          END,
+          'cover_filename', al.cover_filename,
+          'cover_url', '/album-files/' || al.cover_filename,
+          'cover', '/album-files/' || al.cover_filename,
           'release_year', al.release_year
         )
         ELSE NULL
@@ -113,7 +107,7 @@ async function searchSongs(searchTerm) {
   return result.rows;
 }
 
-//SENDS THE ARTISTS CORRESPONDING TO THE QUERY
+// SENDS THE ARTISTS CORRESPONDING TO THE QUERY
 async function searchArtists(searchTerm) {
   const result = await pool.query(
     `
@@ -147,11 +141,11 @@ async function searchAlbums(searchTerm) {
     SELECT
       al.id,
       al.title,
+      al.cover_filename,
       al.release_year,
-      CASE
-        WHEN al.cover_filename IS NOT NULL THEN '/covers/' || al.cover_filename
-        ELSE NULL
-      END AS cover,
+      '/album-files/' || al.cover_filename AS cover_url,
+      '/album-files/' || al.cover_filename AS cover,
+
       COUNT(DISTINCT s.id) AS song_count,
 
       CASE
@@ -204,7 +198,7 @@ async function searchAlbums(searchTerm) {
   return result.rows;
 }
 
-// FINDS THE GENRES CORRESPONDING TO THE QUERY (AND THE NUMBER OF SONGS IT FONUD OF THAT GENRE)
+// FINDS THE GENRES CORRESPONDING TO THE QUERY
 async function searchGenres(searchTerm) {
   const result = await pool.query(
     `
