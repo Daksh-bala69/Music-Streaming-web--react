@@ -2,8 +2,8 @@ import React from "react";
 import { searchMusic } from "../api/searchApi.js";
 import SongResult from "../components/SongResult.jsx";
 import AlbumResult from "../components/AlbumResult.jsx";
-import ArtistResult from "../components/ArtistResult.jsx";
 import GenreResult from "../components/GenreResult.jsx";
+import ArtistResult from "../components/ArtistResult.jsx";
 
 function SearchPage(props) {
     const [query, setQuery] = React.useState(""); // THE QUERY THAT THE USER SEARCHES

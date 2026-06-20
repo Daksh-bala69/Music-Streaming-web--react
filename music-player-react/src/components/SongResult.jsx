@@ -1,18 +1,23 @@
 import React from "react";
+import AddToPlaylistButton from "./AddToPlaylistButton.jsx";
 
-function SongResult(props) {
-    return (
-        <div className="songResult" onClick={props.onClick}>
-            <img src={"http://localhost:5000" + props.song.cover}/>
+function SongResult({ song, onClick }) {
+  return (
+    <div className="songResult" onClick={() => onClick()}>
+      <img src={"http://localhost:5000" + song.cover} alt={song.title} />
 
-            <div className="resultInfo">
-                <h3>{props.song.title}</h3>
-                <p>{props.song.artists[0].name}</p>
-            </div>
+      <div className="resultInfo">
+        <h3>{song.title}</h3>
+        <p>
+          {song.artists?.map((artist) => artist.name).join(", ") ||
+            song.artist ||
+            "Unknown Artist"}
+        </p>
+      </div>
 
-            <span className="resultType">Song</span>
-        </div>
-    )
+      <AddToPlaylistButton song={song} />
+    </div>
+  );
 }
 
 export default SongResult;

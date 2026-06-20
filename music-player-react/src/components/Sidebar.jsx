@@ -21,10 +21,10 @@ function Sidebar({ activePage, setActivePage }) {
         </button>
 
         <button
-          className={activePage === "playlists" ? "active" : ""}
-          onClick={() => setActivePage("playlists")}
+          className={activePage === "library" ? "active" : ""}
+          onClick={() => setActivePage("library")}
         >
-          Your Playlists
+          Your Library
         </button>
 
         <button
