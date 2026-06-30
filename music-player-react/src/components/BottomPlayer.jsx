@@ -10,15 +10,45 @@ function BottomPlayer({
   previousSong,
   audioRef,
   changeVolume,
-  volume, 
+  volume,
   isShuffle,
   toggleShuffle,
   repeatMode,
   toggleRepeat
 }) {
+  if (!currentSong) {
+    return (
+      <div className="bottomPlayer">
+        <div className="miniSong">
+          <div>
+            <h4>No song playing</h4>
+            <p>Pick a song to start</p>
+          </div>
+        </div>
+
+        <Controls
+          previousSong={previousSong}
+          nextSong={nextSong}
+          togglePlay={togglePlay}
+          isPlaying={false}
+          controlClass={"bottomControls"}
+          isShuffle={isShuffle}
+          toggleShuffle={toggleShuffle}
+          toggleRepeat={toggleRepeat}
+          repeatMode={repeatMode}
+        />
+
+        <Volume
+          audioRef={audioRef}
+          volume={volume}
+          changeVolume={changeVolume}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="bottomPlayer">
-      {/* THE MINISONG WITHT THE ARTIST COVER AND THE TITLE AND ARTIST NAME OF THE SONG */}
       <div className="miniSong">
         <img src={currentSong.cover} alt="Album Cover" />
 
@@ -27,30 +57,26 @@ function BottomPlayer({
           <p>{currentSong.artist}</p>
         </div>
 
-        {/* THE LIKE BUTTON */}
         <button className="heartButton">♥</button>
       </div>
 
-      {/* THE CONTROL BUTTONS AT THE BOTTOM */}
-      <Controls 
-        previousSong = {previousSong} 
-        nextSong = {nextSong}
-        togglePlay = {togglePlay}
-        isPlaying = {isPlaying}
-        controlClass = {"bottomControls"}
-        isShuffle = {isShuffle}
-        toggleShuffle = {toggleShuffle}
-        toggleRepeat = {toggleRepeat}
-        repeatMode = {repeatMode}
+      <Controls
+        previousSong={previousSong}
+        nextSong={nextSong}
+        togglePlay={togglePlay}
+        isPlaying={isPlaying}
+        controlClass={"bottomControls"}
+        isShuffle={isShuffle}
+        toggleShuffle={toggleShuffle}
+        toggleRepeat={toggleRepeat}
+        repeatMode={repeatMode}
       />
 
-      {/* THE VOLUME BAR */}
-      <Volume     
-        audioRef = {audioRef}
-        volume = {volume}
-        changeVolume = {changeVolume}
+      <Volume
+        audioRef={audioRef}
+        volume={volume}
+        changeVolume={changeVolume}
       />
-
     </div>
   );
 }

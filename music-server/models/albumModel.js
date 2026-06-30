@@ -95,6 +95,9 @@ export async function findSongsByAlbumId(id) {
       albums.id AS album_id,
       albums.title AS album_title,
 
+      artists.id AS artist_id,
+      artists.name AS artist_name,
+
       '/api/songs/' || songs.id || '/stream' AS stream_url,
       '/api/songs/' || songs.id || '/stream' AS audio,
       '/album-files/' || songs.cover_filename AS cover_url,
@@ -104,6 +107,9 @@ export async function findSongsByAlbumId(id) {
 
     LEFT JOIN albums
       ON songs.album_id = albums.id
+
+    LEFT JOIN artists
+      ON albums.artist_id = artists.id
 
     WHERE songs.album_id = $1
 
@@ -116,8 +122,15 @@ export async function findSongsByAlbumId(id) {
     id: song.id,
     title: song.title,
 
+    // ALBUM INFO
     album: song.album_title,
+    album_title: song.album_title,
     album_id: song.album_id,
+
+    // ARTIST INFO
+    artist: song.artist_name,
+    artist_name: song.artist_name,
+    artist_id: song.artist_id,
 
     filename: song.filename,
     file_path: song.file_path,

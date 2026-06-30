@@ -1,4 +1,4 @@
-import { findAllGenres,findGenreById,findSongsByGenreId, } from "../models/genreModel.js";
+import { findAllGenres,findGenreById,findSongsByGenreId,findRandomSongsBySameGenre } from "../models/genreModel.js";
 
 // GETS ALL THE GENRES (FOR SERCH)
 export async function getAllGenres(req, res) {
@@ -43,6 +43,24 @@ export async function getGenreById(req, res) {
 
     res.status(500).json({
       message: "Failed to get genre",
+    });
+  }
+}
+
+export async function getRandomSongsByGenre(req, res) {
+  try{
+    const songId = Number(req.params.songId);
+    const limit = Number(req.query.limit) || 10;
+
+    const songs = await findRandomSongsBySameGenre(songId,limit);
+
+    res.json({songs});
+  }
+  catch(error){
+    console.error("Error getting your queue:", error)
+
+    res.status(500).json({
+      message: "Error getting your queue"
     });
   }
 }

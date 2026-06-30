@@ -16,6 +16,16 @@ function PlayerCard({
   repeatMode,
   toggleRepeat
 }) {
+  if (!currentSong) {
+    return (
+      <div className="playerCard">
+        <div className="emptyPlayer">
+          <h2>No song playing</h2>
+          <p>Choose a song from Search, Library, or an Album.</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="playerCard">
       {/* THE TOP OD THE SONG CONTAINING THE CONTROLS, IMAGE, ARTIST AND SONG NAME AND THE SEEKBAR */}

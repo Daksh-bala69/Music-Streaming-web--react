@@ -2,8 +2,9 @@ import React from "react";
 import { getAlbumById } from "../api/albumApi";
 import { formatDuration } from "../components/QueueList.jsx";
 import "../styles/AlbumPage.css";
+import { API_URL } from "../api/config.js";
 
-function AlbumPage({ id }) {
+function AlbumPage({ id, playSongFromSearch, playSongsFromAlbum }) {
     const [album, setAlbum] = React.useState(null);
     const [songs, setSongs] = React.useState([]);
     const [isLoading, setIsLoading] = React.useState(true);
@@ -71,7 +72,7 @@ function AlbumPage({ id }) {
       <section className="album-hero">
         <div className="album-cover-box">
           <img
-            src={"http://localhost:5000" + album.cover_url}
+            src={API_URL + album.cover_url}
             alt={album.title}
           />
         </div>
@@ -117,14 +118,16 @@ function AlbumPage({ id }) {
           </div>
 
           {songs.map((song, index) => (
-            <div className="album-track-row" key={song.id}>
+            <div className="album-track-row" key={song.id} onClick={() => {
+                    playSongsFromAlbum(songs,song);
+                }} >
               <span className="album-track-number">
                 {song.track_number || index + 1}
               </span>
 
               <div className="album-track-title">
                 <h3>{song.title}</h3>
-                <p>{song.artist || album.artist || "Unknown Artist"}</p>
+                <p>{album.artist || "Unknown Artist"}</p>
               </div>
 
               <p className="album-track-name">

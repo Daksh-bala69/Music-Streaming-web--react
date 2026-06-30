@@ -24,7 +24,7 @@ function QueueList({ currentSongIndex, loadSong, songs }) {
             <p>{song.artist}</p>
           </div>
 
-          <AddToPlaylistButton song = {song}/>
+          {/*<AddToPlaylistButton song = {song}/>*/}
 
           <span className="songTime">
             {index === currentSongIndex ? "▶" : formatDuration(song.duration)}

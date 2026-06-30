@@ -1,10 +1,11 @@
 import React from "react";
 import AddToPlaylistButton from "./AddToPlaylistButton.jsx";
+import { API_URL } from "../api/config.js";
 
 function SongResult({ song, onClick }) {
   return (
     <div className="songResult" onClick={() => onClick()}>
-      <img src={"http://localhost:5000" + song.cover} alt={song.title} />
+      <img src={API_URL + song.cover} alt={song.title} />
 
       <div className="resultInfo">
         <h3>{song.title}</h3>

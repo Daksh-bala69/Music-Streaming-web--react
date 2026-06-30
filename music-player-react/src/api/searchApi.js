@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5000";
+import { API_URL } from "./config";
 
 export async function searchMusic(query) {
     if (!query.trim()) {
@@ -13,7 +13,7 @@ export async function searchMusic(query) {
         };
     }
 
-    const result = await fetch(API_BASE_URL + `/api/search?q=${encodeURIComponent(query)}`);
+    const result = await fetch(API_URL + `/api/search?q=${encodeURIComponent(query)}`);
 
     if(!result.ok){
         throw new Error("Search Failed");

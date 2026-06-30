@@ -56,7 +56,7 @@ function SearchPage(props) {
 
     function handleAlbumsFilter() {
         return results.albums.map((album) => {
-            return <AlbumResult album={album} key={album.id} />
+            return <AlbumResult album={album} key={album.id} onClick={() => props.onAlbumClick(album)} />
         })
     }
 

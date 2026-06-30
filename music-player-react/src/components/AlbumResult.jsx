@@ -1,9 +1,10 @@
 import React from "react";
+import { API_URL } from "../api/config";
 
 function AlbumResult(props) {
     return (
-        <div className="albumResult">
-            <img src={"http://localhost:5000" + props.album.cover}
+        <div className="albumResult" onClick={() => props.onClick()} >
+            <img src={API_URL + props.album.cover}
             />
 
             <div className="resultInfo">

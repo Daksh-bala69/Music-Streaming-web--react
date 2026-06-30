@@ -1,12 +1,12 @@
 import React from "react";
 import QueueList from "./QueueList.jsx";
 
-function Queue({ songs, currentSongIndex, loadSong }) {
+function Queue({ songs, currentSongIndex, loadSong, clearQueue }) {
   return (
     <div className="queue">
       <div className="queueHeader">
         <h3>Queue</h3>
-        <span>Clear</span>
+        <span onClick={()=> clearQueue()}>Clear</span>
       </div>
 
       <QueueList 

@@ -1,17 +1,17 @@
-const BASE_URL = "http://localhost:5000/api/playlists";
+import { API_URL } from "./config";
 
 export async function getPlaylists() {
-  const res = await fetch(BASE_URL);
+  const res = await fetch(API_URL + "/api/playlists");
   return res.json();
 }
 
 export async function getPlaylistById(id) {
-  const res = await fetch(`${BASE_URL}/${id}`);
+  const res = await fetch(API_URL + `/api/playlists/${id}`);
   return res.json();
 }
 
 export async function createPlaylist(name) {
-  const res = await fetch(BASE_URL, {
+  const res = await fetch(API_URL + "/api/playlists", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,7 +23,7 @@ export async function createPlaylist(name) {
 }
 
 export async function addSongToPlaylist(playlistId, songId) {
-  const res = await fetch(`${BASE_URL}/${playlistId}/songs`, {
+  const res = await fetch(API_URL + `/api/playlists/${playlistId}/songs`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -35,7 +35,7 @@ export async function addSongToPlaylist(playlistId, songId) {
 }
 
 export async function removeSongFromPlaylist(playlistId, songId) {
-  const res = await fetch(`${BASE_URL}/${playlistId}/songs/${songId}`, {
+  const res = await fetch(API_URL + `/api/playlists/${playlistId}/songs/${songId}`, {
     method: "DELETE",
   });
 

@@ -6,16 +6,16 @@ import BottomPlayer from "./components/BottomPlayer";
 import SearchPage from "./pages/SearchPage";
 import LibraryPage from "./pages/LibraryPage";
 import AlbumPage from "./pages/AlbumPage";
-
+import { getRandomSongsFromSameGenre } from "./api/genreApi";
 // THE BACKEND URL THAT THE FRONTEND USES TO FETCH SONGS, COVERS, AND STREAMS
-const API_URL = "http://localhost:5000";
+import { API_URL } from "./api/config";
 
 function App() {
-  // THE MAIN SONGS ARRAY THAT STORES ALL THE SONGS USED BY THE PLAYER AND QUEUE
-  const [songs, setSongs] = React.useState([]);
+  // THE QUEUE ONLY STORES SONGS THAT THE USER HAS PLAYED OR ADDED
+  const [queue, setQueue] = React.useState([]);
 
   // HOOKS FOR THE CURRENT SONG AND PLAYER STATE
-  const [currentSongIndex, setCurrentSongIndex] = React.useState(0);
+  const [currentSongIndex, setCurrentSongIndex] = React.useState(-1);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
@@ -23,7 +23,7 @@ function App() {
   const [repeatMode, setRepeatMode] = React.useState(false);
   const [isShuffle, setIsShuffle] = React.useState(false);
 
-  //HOOKS FOR THE ALBUM
+  // HOOKS FOR THE ALBUM
   const [album, setAlbum] = React.useState({});
 
   // HOOK THAT CONTROLS WHICH PAGE IS SHOWING IN THE MIDDLE CONTENT AREA
@@ -33,7 +33,8 @@ function App() {
   const audioRef = React.useRef(new Audio());
 
   // THE CURRENT SONG THAT IS BEING DISPLAYED AND PLAYED
-  const currentSong = songs[currentSongIndex];
+  const currentSong =
+    currentSongIndex >= 0 ? queue[currentSongIndex] : null;
 
   // FUNCTION THAT OPENS THE ALBUM PAGE WHEN AN ALBUM IS CLICKED
   function openAlbumPage(album) {
@@ -89,42 +90,17 @@ function App() {
     };
   }
 
-  // LOADS ALL SONGS FROM THE BACKEND WHEN THE APP FIRST STARTS
-  React.useEffect(() => {
-    async function fetchSongs() {
-      try {
-        const response = await fetch(`${API_URL}/api/songs`);
-        const data = await response.json();
-
-        // NORMALIZES ALL SONGS BEFORE PUTTING THEM INTO STATE
-        const normalizedSongs = data.map(normalizeSong);
-
-        setSongs(normalizedSongs);
-
-        // SETS THE FIRST SONG AS THE DEFAULT AUDIO SOURCE
-        if (normalizedSongs.length > 0) {
-          audioRef.current.src = normalizedSongs[0].audio;
-          audioRef.current.volume = volume;
-        }
-      } catch (err) {
-        console.error("Error fetching songs: ", err);
-      }
-    }
-
-    fetchSongs();
-  }, []);
-
-  // FUNCTION THAT LOADS A SONG INTO THE AUDIO PLAYER BY INDEX
+  // FUNCTION THAT LOADS A SONG FROM THE QUEUE BY INDEX
   function loadSong(index, shouldPlay = true) {
-    if (songs.length === 0) return;
+    if (queue.length === 0) return;
 
-    // IF THE INDEX IS OUTSIDE THE SONG ARRAY, RESET TO THE FIRST SONG
-    if (index < 0 || index >= songs.length) {
-      index = 0;
-      shouldPlay = false;
+    // IF THE INDEX IS OUTSIDE THE QUEUE, STOP PLAYBACK MOVEMENT
+    if (index < 0 || index >= queue.length) {
+      setIsPlaying(false);
+      return;
     }
 
-    const selectedSong = songs[index];
+    const selectedSong = queue[index];
 
     // RESETS AND LOADS THE SELECTED SONG
     audioRef.current.pause();
@@ -146,55 +122,134 @@ function App() {
           setIsPlaying(true);
         })
         .catch((err) => {
-          console.error("Error playing song:", err);
+          console.error("Error playing queue song:", err);
           setIsPlaying(false);
         });
     }
   }
 
   // FUNCTION THAT PLAYS A SONG FROM SEARCH, PLAYLISTS, ALBUM PAGES, ETC
-  function playSongFromSearch(song) {
-    // CHECKS IF THE SONG ALREADY EXISTS IN THE MAIN SONGS ARRAY
-    const existingIndex = songs.findIndex((s) => s.id === song.id);
-
-    // IF IT ALREADY EXISTS, JUST LOAD IT FROM THE CURRENT SONG ARRAY
-    if (existingIndex !== -1) {
-      loadSong(existingIndex, true);
-      return;
-    }
-
-    // IF IT DOES NOT EXIST, NORMALIZE IT AND ADD IT TO THE QUEUE
+// FUNCTION THAT PLAYS A SEARCH SONG AND ADDS RANDOM SONGS FROM THE SAME GENRE TO THE QUEUE
+async function playSongFromSearch(song) {
+  try {
+    // NORMALIZES THE CLICKED SONG FIRST
     const formattedSong = normalizeSong(song);
-    const newIndex = songs.length;
 
-    setSongs((prevSongs) => [...prevSongs, formattedSong]);
+    // GETS RANDOM SONGS FROM THE SAME GENRE
+    const response = await getRandomSongsFromSameGenre(formattedSong.id, 10);
 
-    // LOADS THE NEW SONG DIRECTLY INTO THE AUDIO PLAYER
+    // NORMALIZES THE RANDOM GENRE SONGS
+    const randomGenreSongs = response.songs.map(normalizeSong);
+
+    // REMOVES THE CLICKED SONG IF IT ALSO APPEARS IN THE RANDOM RESULTS
+    const filteredGenreSongs = randomGenreSongs.filter(
+      (genreSong) => genreSong.id !== formattedSong.id
+    );
+
+    // CREATES A NEW QUEUE WITH THE CLICKED SONG FIRST
+    const newQueue = [formattedSong, ...filteredGenreSongs];
+
+    // REPLACES THE CURRENT QUEUE WITH THE SEARCH-GENERATED QUEUE
+    setQueue(newQueue);
+
+    // LOADS THE CLICKED SONG DIRECTLY INTO THE AUDIO PLAYER
     audioRef.current.pause();
     audioRef.current.src = formattedSong.audio;
     audioRef.current.load();
     audioRef.current.volume = volume;
 
-    // UPDATES THE PLAYER STATE FOR THE NEW SONG
-    setCurrentSongIndex(newIndex);
+    // UPDATES THE PLAYER STATE
+    setCurrentSongIndex(0);
     setCurrentTime(0);
     setDuration(0);
     setIsPlaying(false);
 
-    // PLAYS THE NEW SONG
+    // PLAYS THE CLICKED SONG
     audioRef.current
       .play()
       .then(() => {
         setIsPlaying(true);
       })
       .catch((err) => {
-        console.error("Error playing searched song:", err);
+        console.error("Error playing search song:", err);
+        setIsPlaying(false);
+      });
+  } catch (error) {
+    console.error("Error creating genre queue:", error);
+
+    // FALLBACK: IF GENRE SONGS FAIL, STILL PLAY THE CLICKED SONG
+    const formattedSong = normalizeSong(song);
+
+    setQueue([formattedSong]);
+
+    audioRef.current.pause();
+    audioRef.current.src = formattedSong.audio;
+    audioRef.current.load();
+    audioRef.current.volume = volume;
+
+    setCurrentSongIndex(0);
+    setCurrentTime(0);
+    setDuration(0);
+    setIsPlaying(false);
+
+    audioRef.current
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch((err) => {
+        console.error("Error playing fallback search song:", err);
+        setIsPlaying(false);
+      });
+  }
+}
+
+  // FUNCTION THAT REPLACES THE QUEUE WITH ALBUM SONGS AND PLAYS THE CLICKED SONG
+  function playSongsFromAlbum(albumSongs, clickedSong) {
+    // NORMALIZES ALL SONGS FROM THE ALBUM
+    const formattedAlbumSongs = albumSongs.map(normalizeSong);
+
+    // FINDS THE CLICKED SONG INSIDE THE ALBUM SONGS
+    const clickedIndex = formattedAlbumSongs.findIndex(
+      (song) => song.id === clickedSong.id
+    );
+
+    // IF THE CLICKED SONG IS NOT FOUND, STOP
+    if (clickedIndex === -1) return;
+
+    const selectedSong = formattedAlbumSongs[clickedIndex];
+
+    // REPLACES THE OLD QUEUE WITH THE FULL ALBUM
+    setQueue(formattedAlbumSongs);
+
+    // LOADS THE CLICKED SONG DIRECTLY INTO THE AUDIO PLAYER
+    audioRef.current.pause();
+    audioRef.current.src = selectedSong.audio;
+    audioRef.current.load();
+    audioRef.current.volume = volume;
+
+    // UPDATES THE PLAYER STATE
+    setCurrentSongIndex(clickedIndex);
+    setCurrentTime(0);
+    setDuration(0);
+    setIsPlaying(false);
+
+    // PLAYS THE CLICKED SONG
+    audioRef.current
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch((err) => {
+        console.error("Error playing album song:", err);
         setIsPlaying(false);
       });
   }
 
   // FUNCTION THAT TOGGLES PLAY AND PAUSE
   function togglePlay() {
+    if (!currentSong) return;
+
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -224,6 +279,8 @@ function App() {
 
   // FUNCTION THAT PLAYS THE NEXT SONG
   function nextSong() {
+    if (!currentSong) return;
+
     if (repeatMode || isShuffle) {
       handleSongEnd();
       return;
@@ -234,6 +291,8 @@ function App() {
 
   // FUNCTION THAT PLAYS THE PREVIOUS SONG
   function previousSong() {
+    if (!currentSong) return;
+
     if (repeatMode || isShuffle) {
       handleSongEnd();
       return;
@@ -244,20 +303,22 @@ function App() {
 
   // FUNCTION THAT RUNS WHEN THE CURRENT SONG ENDS
   function handleSongEnd() {
+    if (queue.length === 0 || currentSongIndex === -1) return;
+
     // IF REPEAT IS ON, PLAY THE SAME SONG AGAIN
     if (repeatMode) {
       loadSong(currentSongIndex);
       return;
     }
 
-    // IF SHUFFLE IS ON, PICK A RANDOM SONG
+    // IF SHUFFLE IS ON, PICK A RANDOM SONG FROM THE QUEUE
     if (isShuffle) {
-      let randomIndex = Math.floor(Math.random() * songs.length);
+      let randomIndex = Math.floor(Math.random() * queue.length);
 
       // MAKES SURE THE SAME SONG DOES NOT REPEAT IF THERE IS MORE THAN ONE SONG
-      if (songs.length > 1) {
+      if (queue.length > 1) {
         while (randomIndex === currentSongIndex) {
-          randomIndex = Math.floor(Math.random() * songs.length);
+          randomIndex = Math.floor(Math.random() * queue.length);
         }
       }
 
@@ -265,16 +326,36 @@ function App() {
       return;
     }
 
-    // DEFAULT BEHAVIOR: PLAY THE NEXT SONG
+    // DEFAULT BEHAVIOR: PLAY THE NEXT SONG IN THE QUEUE
     loadSong(currentSongIndex + 1);
+  }
+
+  // CLEAR QUEUE
+  function clearQueue() {
+    audioRef.current.pause();
+    audioRef.current.src = "";
+
+    setQueue([]);
+    setCurrentSongIndex(-1);
+    setCurrentTime(0);
+    setDuration(0);
+    setIsPlaying(false);
   }
 
   // ADDS AUDIO EVENT LISTENERS FOR TIME, DURATION, AND SONG ENDING
   React.useEffect(() => {
     const audio = audioRef.current;
 
+    let lastUpdateTime = 0;
+
     // UPDATES THE CURRENT TIME WHILE THE SONG IS PLAYING
     function updateTime() {
+      const now = Date.now();
+
+      // ONLY UPDATE REACT STATE EVERY 500MS TO AVOID TOO MANY RERENDERS
+      if (now - lastUpdateTime < 500) return;
+
+      lastUpdateTime = now;
       setCurrentTime(audio.currentTime);
     }
 
@@ -295,7 +376,7 @@ function App() {
       audio.removeEventListener("loadedmetadata", updateDuration);
       audio.removeEventListener("ended", handleSongEnd);
     };
-  }, [currentSongIndex, volume, isShuffle, repeatMode, songs]);
+  }, [currentSongIndex, volume, isShuffle, repeatMode, queue]);
 
   // FUNCTION THAT SEEKS TO A CERTAIN PERCENT OF THE SONG
   function seekTo(percent) {
@@ -311,11 +392,6 @@ function App() {
   function changeVolume(percent) {
     audioRef.current.volume = percent;
     setVolume(percent);
-  }
-
-  // LOADING SCREEN WHILE SONGS ARE BEING FETCHED
-  if (songs.length === 0) {
-    return <div>Loading songs....</div>;
   }
 
   return (
@@ -343,29 +419,35 @@ function App() {
 
       {/* SEARCH PAGE */}
       {activePage === "search" && (
-        <SearchPage playSongFromSearch={playSongFromSearch} />
+        <SearchPage
+          playSongFromSearch={playSongFromSearch}
+          onAlbumClick={openAlbumPage}
+        />
       )}
 
       {/* LIBRARY PAGE */}
       {activePage === "library" && (
-        <LibraryPage 
-          playSongFromSearch={playSongFromSearch} 
+        <LibraryPage
+          playSongFromSearch={playSongFromSearch}
           onAlbumClick={openAlbumPage}
         />
       )}
 
       {/* ALBUM DETAIL PAGE */}
       {activePage === "album" && (
-        <AlbumPage 
+        <AlbumPage
+          playSongsFromAlbum={playSongsFromAlbum}
+          playSongFromSearch={playSongFromSearch}
           id={album.id}
         />
       )}
 
       {/* QUEUE STAYS VISIBLE ON EVERY PAGE */}
       <Queue
-        songs={songs}
+        songs={queue}
         currentSongIndex={currentSongIndex}
         loadSong={loadSong}
+        clearQueue={clearQueue}
       />
 
       {/* BOTTOM PLAYER STAYS VISIBLE ON EVERY PAGE */}
